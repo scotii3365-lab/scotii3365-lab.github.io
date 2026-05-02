@@ -6,6 +6,9 @@ on:
     - cron: '0 18 * * *'
   workflow_dispatch: # 수동 실행 버튼 추가
 
+permissions:
+  contents: write # 이 부분이 빠져서 에러가 났습니다. 쓰기 권한을 부여합니다.
+
 jobs:
   update-data:
     runs-on: ubuntu-latest
