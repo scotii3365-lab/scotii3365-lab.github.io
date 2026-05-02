@@ -49,6 +49,16 @@
             #search-input { width: 100% !important; }
         }
 
+        .target-indicator {
+            font-size: 0.7rem;
+            color: var(--primary);
+            opacity: 0.8;
+            margin-top: -0.25rem;
+            font-weight: 500;
+            display: flex;
+            justify-content: flex-end;
+        }
+
         .logo {
             font-size: 1.5rem; font-weight: 700; color: var(--primary);
             letter-spacing: -0.05em; margin-bottom: 1rem;
@@ -129,6 +139,7 @@
                 <span id="roe-val" class="filter-value">15</span>
             </div>
             <input type="range" id="roe-slider" min="0" max="50" value="15" step="1">
+            <div class="target-indicator">Target: 15%</div>
         </div>
 
         <div class="filter-group">
@@ -137,22 +148,25 @@
                 <span id="per-val" class="filter-value">25</span>
             </div>
             <input type="range" id="per-slider" min="1" max="100" value="25" step="1">
+            <div class="target-indicator">Target: 25</div>
         </div>
 
         <div class="filter-group">
             <div class="filter-header">
                 <span class="filter-label">Min EPS Growth (%)</span>
-                <span id="eps-val" class="filter-value">20</span>
+                <span id="eps-val" class="filter-value">5</span>
             </div>
-            <input type="range" id="eps-slider" min="0" max="100" value="20" step="5">
+            <input type="range" id="eps-slider" min="0" max="100" value="5" step="1">
+            <div class="target-indicator">Target: 5%</div>
         </div>
 
         <div class="filter-group">
             <div class="filter-header">
                 <span class="filter-label">Min Op. Margin (%)</span>
-                <span id="margin-val" class="filter-value">20</span>
+                <span id="margin-val" class="filter-value">15</span>
             </div>
-            <input type="range" id="margin-slider" min="0" max="50" value="20" step="1">
+            <input type="range" id="margin-slider" min="0" max="50" value="15" step="1">
+            <div class="target-indicator">Target: 15%</div>
         </div>
 
         <div class="filter-group">
@@ -161,6 +175,7 @@
                 <span id="debt-val" class="filter-value">100</span>
             </div>
             <input type="range" id="debt-slider" min="0" max="300" value="100" step="10">
+            <div class="target-indicator">Target: 100%</div>
         </div>
 
         <div style="margin-top: auto; font-size: 0.75rem; color: var(--text-muted); line-height: 1.5;">
