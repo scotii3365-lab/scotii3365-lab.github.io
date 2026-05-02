@@ -25,13 +25,28 @@
 
         body {
             background-color: var(--bg-color); color: var(--text-main);
-            overflow: hidden; display: flex; height: 100vh;
+            display: flex; min-height: 100vh;
         }
 
         .sidebar {
             width: 320px; background-color: var(--sidebar-bg);
             border-right: 1px solid var(--border); padding: 2rem;
-            display: flex; flex-direction: column; gap: 1.5rem; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .main-content { 
+            flex: 1; padding: 2rem; display: flex; flex-direction: column; 
+            gap: 2rem; min-width: 0;
+        }
+
+        /* Responsive Design for Mobile */
+        @media (max-width: 768px) {
+            body { flex-direction: column; overflow-y: auto; }
+            .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); padding: 1.5rem; }
+            .main-content { padding: 1.5rem; overflow: visible; }
+            .header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+            #search-input { width: 100% !important; }
         }
 
         .logo {
@@ -74,7 +89,7 @@
         .table-container {
             background: var(--card-bg); backdrop-filter: blur(12px);
             border: 1px solid var(--border); border-radius: 1rem;
-            overflow: auto; flex: 1;
+            overflow-x: auto; flex: 1;
         }
 
         table { width: 100%; border-collapse: collapse; text-align: left; }
@@ -176,7 +191,7 @@
                     <span id="card-name" style="font-size: 1.25rem; font-weight: 600; color: white;">Apple Inc.</span>
                     <span id="card-market" class="badge">US_SP500</span>
                 </div>
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 0.5rem;">
+                <div id="card-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; margin-top: 0.5rem;">
                     <div style="background: var(--glass); padding: 1rem; border-radius: 0.75rem; text-align: center;">
                         <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">영업이익률</div>
                         <div id="card-margin" style="font-size: 1.25rem; font-weight: 700; color: #10b981;">30.0%</div>
