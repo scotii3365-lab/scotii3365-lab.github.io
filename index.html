@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Stock Screener Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --sidebar-bg: #1e293b;
+            --primary: #10b981;
+            --primary-hover: #059669;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.1);
+            --glass: rgba(255, 255, 255, 0.03);
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            overflow: hidden; display: flex; height: 100vh;
+        }
+
+        .sidebar {
+            width: 320px; background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border); padding: 2rem;
+            display: flex; flex-direction: column; gap: 1.5rem; overflow-y: auto;
+        }
+
+        .logo {
+            font-size: 1.5rem; font-weight: 700; color: var(--primary);
+            letter-spacing: -0.05em; margin-bottom: 1rem;
+        }
+
+        .market-selector {
+            display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;
+        }
+
+        .market-btn {
+            background: var(--glass); border: 1px solid var(--border);
+            color: var(--text-muted); padding: 0.75rem; border-radius: 0.5rem;
+            text-align: left; cursor: pointer; transition: all 0.2s; font-weight: 500;
+        }
+
+        .market-btn.active {
+            background: var(--primary); color: white; border-color: var(--primary);
+        }
+
+        .filter-group { display: flex; flex-direction: column; gap: 0.75rem; }
+        .filter-header { display: flex; justify-content: space-between; align-items: center; }
+        .filter-label { font-size: 0.875rem; font-weight: 500; color: var(--text-muted); }
+        .filter-value { font-size: 0.875rem; font-weight: 600; color: var(--primary); }
+        input[type="range"] { width: 100%; accent-color: var(--primary); cursor: pointer; }
+
+        .main-content { flex: 1; padding: 2rem; display: flex; flex-direction: column; gap: 2rem; overflow: hidden; }
+        .header { display: flex; justify-content: space-between; align-items: flex-end; }
+        .title-area h1 { font-size: 1.875rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .stats { font-size: 0.875rem; color: var(--text-muted); }
+
+        .export-btn {
+            background: var(--primary); color: white; border: none;
+            padding: 0.75rem 1.25rem; border-radius: 0.5rem;
+            font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.2s;
+        }
+        .export-btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
+
+        .table-container {
+            background: var(--card-bg); backdrop-filter: blur(12px);
+            border: 1px solid var(--border); border-radius: 1rem;
+            overflow: auto; flex: 1;
+        }
+
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th {
+            position: sticky; top: 0; background: var(--sidebar-bg);
+            padding: 1rem 1.5rem; font-size: 0.75rem; text-transform: uppercase;
+            letter-spacing: 0.05em; color: var(--text-muted); border-bottom: 1px solid var(--border); z-index: 10;
+        }
+        td { padding: 1rem 1.5rem; font-size: 0.875rem; border-bottom: 1px solid var(--border); }
+        tr:hover td { background: var(--glass); }
+
+        .badge { padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 600; }
+        .badge-kr { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+        .badge-us { background: rgba(56, 189, 248, 0.2); color: #7dd3fc; }
+
+        .no-results { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); gap: 1rem; }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="logo">STOCK HUB</div>
+        
+        <div class="market-selector">
+            <button class="market-btn active" data-market="ALL">All Markets</button>
+            <button class="market-btn" data-market="KR">Korea (KOSPI/KOSDAQ)</button>
+            <button class="market-btn" data-market="US_SP500">USA (S&P 500)</button>
+        </div>
+
+        <div class="filter-group">
+            <div class="filter-header">
+                <span class="filter-label">Min ROE (%)</span>
+                <span id="roe-val" class="filter-value">15</span>
+            </div>
+            <input type="range" id="roe-slider" min="0" max="50" value="15" step="1">
+        </div>
+
+        <div class="filter-group">
+            <div class="filter-header">
+                <span class="filter-label">Max PER (x)</span>
+                <span id="per-val" class="filter-value">25</span>
+            </div>
+            <input type="range" id="per-slider" min="1" max="100" value="25" step="1">
+        </div>
+
+        <div class="filter-group">
+            <div class="filter-header">
+                <span class="filter-label">Min EPS Growth (%)</span>
+                <span id="eps-val" class="filter-value">20</span>
+            </div>
+            <input type="range" id="eps-slider" min="0" max="100" value="20" step="5">
+        </div>
+
+        <div class="filter-group">
+            <div class="filter-header">
+                <span class="filter-label">Min Op. Margin (%)</span>
+                <span id="margin-val" class="filter-value">20</span>
+            </div>
+            <input type="range" id="margin-slider" min="0" max="50" value="20" step="1">
+        </div>
+
+        <div class="filter-group">
+            <div class="filter-header">
+                <span class="filter-label">Max Debt Ratio (%)</span>
+                <span id="debt-val" class="filter-value">100</span>
+            </div>
+            <input type="range" id="debt-slider" min="0" max="300" value="100" step="10">
+        </div>
+
+        <div style="margin-top: auto; font-size: 0.75rem; color: var(--text-muted); line-height: 1.5;">
+            * Unified Dashboard for Global Markets.
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="header">
+            <div class="title-area">
+                <h1>Global Stock Hub</h1>
+                <div id="stats" class="stats">Loading data...</div>
+            </div>
+            <button id="export-btn" class="export-btn">Export to CSV</button>
+        </div>
+
+        <div class="table-container">
+            <table id="stock-table">
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Name</th>
+                        <th>Market</th>
+                        <th>ROE (%)</th>
+                        <th>Margin (%)</th>
+                        <th>EPS Growth (%)</th>
+                        <th>PER (x)</th>
+                        <th>Debt (%)</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body"></tbody>
+            </table>
+            <div id="no-data" class="no-results" style="display: none;"><p>No stocks match the criteria.</p></div>
+        </div>
+    </main>
+
+    <script>
+        let allStocks = [];
+        let currentlyFiltered = [];
+        let currentMarket = 'ALL';
+
+        async function loadData() {
+            try {
+                const response = await fetch('stocks_all.json');
+                allStocks = await response.json();
+                filterData();
+            } catch (error) {
+                document.getElementById('stats').innerText = 'Data file not found. Please run collector.py.';
+            }
+        }
+
+        function filterData() {
+            const roeMin = parseFloat(document.getElementById('roe-slider').value);
+            const perMax = parseFloat(document.getElementById('per-slider').value);
+            const epsMin = parseFloat(document.getElementById('eps-slider').value);
+            const marginMin = parseFloat(document.getElementById('margin-slider').value);
+            const debtMax = parseFloat(document.getElementById('debt-slider').value);
+
+            let filtered = allStocks.filter(s => 
+                s.ROE >= roeMin && s.PER > 0 && s.PER <= perMax &&
+                s.EPSGrowth >= epsMin && s.Margin >= marginMin && s.DebtRatio <= debtMax
+            );
+
+            if (currentMarket === 'KR') {
+                filtered = filtered.filter(s => s.Market.startsWith('KR_'));
+            } else if (currentMarket === 'US_SP500') {
+                filtered = filtered.filter(s => s.Market === 'US_SP500');
+            }
+
+            filtered.sort((a, b) => b.ROE - a.ROE);
+            currentlyFiltered = filtered;
+            renderTable(filtered);
+            updateStats(filtered.length);
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('table-body');
+            const noData = document.getElementById('no-data');
+            const table = document.getElementById('stock-table');
+            tbody.innerHTML = '';
+            if (data.length === 0) { noData.style.display = 'flex'; table.style.display = 'none'; return; }
+            noData.style.display = 'none'; table.style.display = 'table';
+
+            data.forEach(s => {
+                const tr = document.createElement('tr');
+                const marketClass = s.Market.startsWith('KR') ? 'badge-kr' : 'badge-us';
+                tr.innerHTML = `
+                    <td style="font-weight: 700; color: var(--primary);">${s.Symbol}</td>
+                    <td style="font-weight: 500;">${s.Name}</td>
+                    <td><span class="badge ${marketClass}">${s.Market}</span></td>
+                    <td style="font-weight: 600;">${s.ROE.toFixed(2)}%</td>
+                    <td>${s.Margin.toFixed(2)}%</td>
+                    <td>${s.EPSGrowth.toFixed(2)}%</td>
+                    <td>${s.PER.toFixed(2)}</td>
+                    <td>${s.DebtRatio.toFixed(2)}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateStats(count) {
+            document.getElementById('stats').innerText = `${currentMarket} Market: ${count} matches found.`;
+        }
+
+        function downloadCSV() {
+            if (currentlyFiltered.length === 0) return;
+            const headers = ['Symbol', 'Name', 'Market', 'ROE(%)', 'Margin(%)', 'EPSGrowth(%)', 'PER(x)', 'DebtRatio(%)'];
+            
+            const csvEscape = (val) => { 
+                const text = String(val).replace(/"/g, '""'); 
+                return `"${text}"`; 
+            };
+
+            // Excel-friendly text format for symbols to preserve leading zeros
+            const excelText = (val) => {
+                return `="${String(val)}"`;
+            };
+
+            const rows = currentlyFiltered.map(s => [
+                excelText(s.Symbol), // Use special format for Symbol
+                csvEscape(s.Name), 
+                csvEscape(s.Market), 
+                csvEscape(s.ROE.toFixed(2)), 
+                csvEscape(s.Margin.toFixed(2)), 
+                csvEscape(s.EPSGrowth.toFixed(2)), 
+                csvEscape(s.PER.toFixed(2)), 
+                csvEscape(s.DebtRatio.toFixed(2))
+            ]);
+            let csvContent = "\uFEFF" + headers.map(csvEscape).join(",") + "\n";
+            rows.forEach(row => { csvContent += row.join(",") + "\n"; });
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url); link.setAttribute("download", `stocks_export_${currentMarket}.csv`);
+            link.click();
+        }
+
+        // Listeners
+        document.querySelectorAll('.market-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelector('.market-btn.active').classList.remove('active');
+                btn.classList.add('active');
+                currentMarket = btn.dataset.market;
+                filterData();
+            });
+        });
+
+        const sliders = ['roe', 'per', 'eps', 'margin', 'debt'];
+        sliders.forEach(id => {
+            const slider = document.getElementById(`${id}-slider`);
+            const valDisplay = document.getElementById(`${id}-val`);
+            slider.addEventListener('input', () => { valDisplay.innerText = slider.value; filterData(); });
+        });
+
+        document.getElementById('export-btn').addEventListener('click', downloadCSV);
+        loadData();
+    </script>
+</body>
+</html>
