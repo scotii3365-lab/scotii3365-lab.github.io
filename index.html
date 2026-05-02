@@ -263,12 +263,28 @@
         }
 
         function filterData() {
-            const roeMin = parseFloat(document.getElementById('roe-slider').value);
-            const perMax = parseFloat(document.getElementById('per-slider').value);
-            const epsMin = parseFloat(document.getElementById('eps-slider').value);
-            const marginMin = parseFloat(document.getElementById('margin-slider').value);
-            const debtMax = parseFloat(document.getElementById('debt-slider').value);
+            let roeMin = parseFloat(document.getElementById('roe-slider').value);
+            let perMax = parseFloat(document.getElementById('per-slider').value);
+            let epsMin = parseFloat(document.getElementById('eps-slider').value);
+            let marginMin = parseFloat(document.getElementById('margin-slider').value);
+            let debtMax = parseFloat(document.getElementById('debt-slider').value);
             const searchQuery = document.getElementById('search-input').value.toLowerCase();
+
+            // Auto-reset filters when searching
+            if (searchQuery.length > 0) {
+                // Relax filter logic for search
+                roeMin = 0;
+                perMax = 200;
+                epsMin = 0;
+                marginMin = 0;
+                debtMax = 200;
+                
+                // Optional: Update UI to show filters are relaxed (user can see sliders move)
+                // If you want sliders to actually move:
+                // document.getElementById('roe-slider').value = 0; document.getElementById('roe-val').innerText = 0;
+                // ... etc. But that might be annoying if they want to go back.
+                // Let's just bypass in logic first.
+            }
 
             let filtered = allStocks.filter(s => 
                 s.ROE >= roeMin && s.PER > 0 && s.PER <= perMax &&
