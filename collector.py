@@ -69,10 +69,10 @@ def main():
     print("=== 통합 데이터 수집 시작 ===")
     all_results = []
 
-    # 1. KR Stocks (KOSPI 200 + KOSDAQ 200)
-    print("한국 주식 데이터 수집 중...")
-    kr_kospi = fdr.StockListing('KOSPI').sort_values(by='Marcap', ascending=False).head(200)
-    kr_kosdaq = fdr.StockListing('KOSDAQ').sort_values(by='Marcap', ascending=False).head(200)
+    # 1. KR Stocks (KOSPI 500 + KOSDAQ 500)
+    print("한국 주요 종목 데이터 수집 중 (코스피 500 + 코스닥 500)...")
+    kr_kospi = fdr.StockListing('KOSPI').sort_values(by='Marcap', ascending=False).head(500)
+    kr_kosdaq = fdr.StockListing('KOSDAQ').sort_values(by='Marcap', ascending=False).head(500)
     kr_all = pd.concat([kr_kospi, kr_kosdaq])
     
     kr_codes = kr_all['Code'].tolist()
@@ -88,17 +88,31 @@ def main():
                 res['Market'] = 'KR_' + kr_info[code]['Market']
                 all_results.append(res)
 
-    # 2. US Stocks (S&P 500)
-    print("미국 주식 데이터 수집 중...")
-    us_sp500 = fdr.StockListing('S&P500')
-    us_symbols = us_sp500['Symbol'].tolist()
+    # 2. US Stocks (NASDAQ 1000 + NYSE 1000)
+    print("미국 주요 종목 데이터 수집 중 (나스닥 1000 + 뉴욕 1000)...")
+    try:
+        df_nasdaq = fdr.StockListing('NASDAQ').head(1000)
+        df_nasdaq['MarketInfo'] = 'US_NASDAQ'
+        
+        df_nyse = fdr.StockListing('NYSE').head(1000)
+        df_nyse['MarketInfo'] = 'US_NYSE'
+        
+        us_all = pd.concat([df_nasdaq, df_nyse]).drop_duplicates(subset=['Symbol'])
+        us_symbols = us_all['Symbol'].tolist()
+        us_market_map = {row['Symbol']: row['MarketInfo'] for _, row in us_all.iterrows()}
+    except:
+        print("미국 리스트 확보 실패, S&P 500으로 대체합니다.")
+        df_sp500 = fdr.StockListing('S&P500')
+        us_symbols = df_sp500['Symbol'].tolist()
+        us_market_map = {s: 'US_SP500' for s in us_symbols}
     
     with ThreadPoolExecutor(max_workers=20) as executor:
         futures = {executor.submit(get_us_fundamental_data, symbol): symbol for symbol in us_symbols}
         for future in futures:
             res = future.result()
             if res:
-                res['Market'] = 'US_SP500'
+                symbol = res['Symbol']
+                res['Market'] = us_market_map.get(symbol, 'US_UNKNOWN')
                 all_results.append(res)
 
     # Save to JSON

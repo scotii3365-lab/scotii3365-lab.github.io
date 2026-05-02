@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,34 +20,67 @@
         }
 
         * {
-            margin: 0; padding: 0; box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
             font-family: 'Inter', sans-serif;
         }
 
         body {
-            background-color: var(--bg-color); color: var(--text-main);
-            display: flex; min-height: 100vh;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
         }
 
         .sidebar {
-            width: 320px; background-color: var(--sidebar-bg);
-            border-right: 1px solid var(--border); padding: 2rem;
-            display: flex; flex-direction: column; gap: 1.5rem;
+            width: 320px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
             flex-shrink: 0;
         }
 
-        .main-content { 
-            flex: 1; padding: 2rem; display: flex; flex-direction: column; 
-            gap: 2rem; min-width: 0;
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            min-width: 0;
         }
 
         /* Responsive Design for Mobile */
         @media (max-width: 768px) {
-            body { flex-direction: column; overflow-y: auto; }
-            .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); padding: 1.5rem; }
-            .main-content { padding: 1.5rem; overflow: visible; }
-            .header { flex-direction: column; align-items: flex-start; gap: 1rem; }
-            #search-input { width: 100% !important; }
+            body {
+                flex-direction: column;
+                overflow-y: auto;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                padding: 1.5rem;
+            }
+
+            .main-content {
+                padding: 1.5rem;
+                overflow: visible;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            #search-input {
+                width: 100% !important;
+            }
         }
 
         .target-indicator {
@@ -60,77 +94,201 @@
         }
 
         .logo {
-            font-size: 1.5rem; font-weight: 700; color: var(--primary);
-            letter-spacing: -0.05em; margin-bottom: 1rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: -0.05em;
+            margin-bottom: 1rem;
         }
 
         .market-selector {
-            display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
         }
 
         .market-btn {
-            background: var(--glass); border: 1px solid var(--border);
-            color: var(--text-muted); padding: 0.75rem; border-radius: 0.5rem;
-            text-align: left; cursor: pointer; transition: all 0.2s; font-weight: 500;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
         }
 
         .market-btn.active {
-            background: var(--primary); color: white; border-color: var(--primary);
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
         }
 
-        .filter-group { display: flex; flex-direction: column; gap: 0.75rem; }
-        .filter-header { display: flex; justify-content: space-between; align-items: center; }
-        .filter-label { font-size: 0.875rem; font-weight: 500; color: var(--text-muted); }
-        .filter-value { font-size: 0.875rem; font-weight: 600; color: var(--primary); }
-        input[type="range"] { width: 100%; accent-color: var(--primary); cursor: pointer; }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
 
-        .main-content { flex: 1; padding: 2rem; display: flex; flex-direction: column; gap: 2rem; overflow: hidden; }
-        .header { display: flex; justify-content: space-between; align-items: flex-end; }
-        .title-area h1 { font-size: 1.875rem; font-weight: 700; margin-bottom: 0.5rem; }
-        .stats { font-size: 0.875rem; color: var(--text-muted); }
+        .filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .filter-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .filter-value {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            overflow: hidden;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .title-area h1 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stats {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
 
         .export-btn {
-            background: var(--primary); color: white; border: none;
-            padding: 0.75rem 1.25rem; border-radius: 0.5rem;
-            font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.2s;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
         }
-        .export-btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
+
+        .export-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
 
         .table-container {
-            background: var(--card-bg); backdrop-filter: blur(12px);
-            border: 1px solid var(--border); border-radius: 1rem;
-            overflow-x: auto; flex: 1;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            overflow-x: auto;
+            flex: 1;
         }
 
-        table { width: 100%; border-collapse: collapse; text-align: left; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
         th {
-            position: sticky; top: 0; background: var(--sidebar-bg);
-            padding: 1rem 1.5rem; font-size: 0.75rem; text-transform: uppercase;
-            letter-spacing: 0.05em; color: var(--text-muted); border-bottom: 1px solid var(--border); z-index: 10;
+            position: sticky;
+            top: 0;
+            background: var(--sidebar-bg);
+            padding: 1rem 1.5rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            z-index: 10;
         }
-        td { padding: 1rem 1.5rem; font-size: 0.875rem; border-bottom: 1px solid var(--border); }
-        tr:hover td { background: var(--glass); }
 
-        .badge { padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 600; }
-        .badge-kr { background: rgba(16, 185, 129, 0.2); color: #34d399; }
-        .badge-us { background: rgba(56, 189, 248, 0.2); color: #7dd3fc; }
+        td {
+            padding: 1rem 1.5rem;
+            font-size: 0.875rem;
+            border-bottom: 1px solid var(--border);
+        }
 
-        .no-results { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); gap: 1rem; }
+        tr:hover td {
+            background: var(--glass);
+        }
 
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        .badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-kr {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+        }
+
+        .badge-us {
+            background: rgba(56, 189, 248, 0.2);
+            color: #7dd3fc;
+        }
+
+        .no-results {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+            gap: 1rem;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
     </style>
 </head>
+
 <body>
 
     <aside class="sidebar">
         <div class="logo">STOCK HUB</div>
-        
+
         <div class="market-selector">
             <button class="market-btn active" data-market="ALL">All Markets</button>
             <button class="market-btn" data-market="KR">Korea (KOSPI/KOSDAQ)</button>
-            <button class="market-btn" data-market="US_SP500">USA (S&P 500)</button>
+            <button class="market-btn" data-market="US">USA (Global)</button>
         </div>
 
         <div class="filter-group">
@@ -147,7 +305,7 @@
                 <span class="filter-label">Max PER (x)</span>
                 <span id="per-val" class="filter-value">25</span>
             </div>
-            <input type="range" id="per-slider" min="1" max="200" value="25" step="1">
+            <input type="range" id="per-slider" min="-100" max="200" value="25" step="1">
             <div class="target-indicator">Target: 25</div>
         </div>
 
@@ -190,22 +348,25 @@
                 <div id="stats" class="stats">Loading data...</div>
             </div>
             <div style="display: flex; gap: 1rem; align-items: center;">
-                <input type="text" id="search-input" placeholder="종목명 또는 심볼 검색..." 
+                <input type="text" id="search-input" placeholder="종목명 또는 심볼 검색..."
                     style="padding: 0.75rem 1rem; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--card-bg); color: white; width: 250px;">
                 <button id="export-btn" class="export-btn">Export to CSV</button>
             </div>
         </div>
 
         <div id="detail-card" style="display: none; animation: fadeIn 0.4s ease;">
-            <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid var(--primary); border-radius: 1rem; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem; position: relative;">
-                <button onclick="document.getElementById('detail-card').style.display='none'" 
+            <div
+                style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid var(--primary); border-radius: 1rem; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem; position: relative;">
+                <button onclick="document.getElementById('detail-card').style.display='none'"
                     style="position: absolute; right: 1rem; top: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem;">✕</button>
                 <div style="display: flex; align-items: center; gap: 1rem;">
-                    <span id="card-symbol" style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">AAPL</span>
+                    <span id="card-symbol"
+                        style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">AAPL</span>
                     <span id="card-name" style="font-size: 1.25rem; font-weight: 600; color: white;">Apple Inc.</span>
                     <span id="card-market" class="badge">US_SP500</span>
                 </div>
-                <div id="card-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; margin-top: 0.5rem;">
+                <div id="card-grid"
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; margin-top: 0.5rem;">
                     <div style="background: var(--glass); padding: 1rem; border-radius: 0.75rem; text-align: center;">
                         <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">ROE</div>
                         <div id="card-roe" style="font-size: 1.25rem; font-weight: 700; color: #10b981;">15.0%</div>
@@ -246,7 +407,9 @@
                 </thead>
                 <tbody id="table-body"></tbody>
             </table>
-            <div id="no-data" class="no-results" style="display: none;"><p>No stocks match the criteria.</p></div>
+            <div id="no-data" class="no-results" style="display: none;">
+                <p>No stocks match the criteria.</p>
+            </div>
         </div>
     </main>
 
@@ -273,43 +436,36 @@
             let debtMax = parseFloat(document.getElementById('debt-slider').value);
             const searchQuery = document.getElementById('search-input').value.toLowerCase();
 
-            // Auto-reset filters when searching
+            // Search mode bypasses filters
+            let filtered = [];
             if (searchQuery.length > 0) {
-                // Relax filter logic for search
-                roeMin = 0;
-                perMax = 200;
-                epsMin = 0;
-                marginMin = 0;
-                debtMax = 200;
-                
-                // Optional: Update UI to show filters are relaxed (user can see sliders move)
-                // If you want sliders to actually move:
-                // document.getElementById('roe-slider').value = 0; document.getElementById('roe-val').innerText = 0;
-                // ... etc. But that might be annoying if they want to go back.
-                // Let's just bypass in logic first.
+                filtered = allStocks;
+            } else {
+                filtered = allStocks.filter(s =>
+                    s.ROE >= roeMin && 
+                    (perMax >= 200 || (s.PER > 0 && s.PER <= perMax)) &&
+                    s.EPSGrowth >= epsMin && 
+                    s.Margin >= marginMin && 
+                    s.DebtRatio <= debtMax
+                );
             }
-
-            let filtered = allStocks.filter(s => 
-                s.ROE >= roeMin && s.PER > 0 && s.PER <= perMax &&
-                s.EPSGrowth >= epsMin && s.Margin >= marginMin && s.DebtRatio <= debtMax
-            );
 
             if (currentMarket === 'KR') {
                 filtered = filtered.filter(s => s.Market.startsWith('KR_'));
-            } else if (currentMarket === 'US_SP500') {
-                filtered = filtered.filter(s => s.Market === 'US_SP500');
+            } else if (currentMarket === 'US') {
+                filtered = filtered.filter(s => s.Market.startsWith('US_'));
             }
 
             // Search logic
             if (searchQuery) {
-                filtered = filtered.filter(s => 
-                    s.Name.toLowerCase().includes(searchQuery) || 
+                filtered = filtered.filter(s =>
+                    s.Name.toLowerCase().includes(searchQuery) ||
                     s.Symbol.toLowerCase().includes(searchQuery)
                 );
-                
+
                 // If there's an exact or very close match, show the detail card
-                const exactMatch = filtered.find(s => 
-                    s.Name.toLowerCase() === searchQuery || 
+                const exactMatch = filtered.find(s =>
+                    s.Name.toLowerCase() === searchQuery ||
                     s.Symbol.toLowerCase() === searchQuery
                 ) || filtered[0];
 
@@ -334,7 +490,7 @@
             document.getElementById('card-name').innerText = stock.Name;
             document.getElementById('card-market').innerText = stock.Market;
             document.getElementById('card-market').className = 'badge ' + (stock.Market.startsWith('KR') ? 'badge-kr' : 'badge-us');
-            
+
             document.getElementById('card-roe').innerText = stock.ROE.toFixed(1) + '%';
             document.getElementById('card-per').innerText = stock.PER.toFixed(1);
             document.getElementById('card-eps').innerText = stock.EPSGrowth.toFixed(1) + '%';
@@ -374,10 +530,10 @@
         function downloadCSV() {
             if (currentlyFiltered.length === 0) return;
             const headers = ['Symbol', 'Name', 'Market', 'ROE(%)', 'Margin(%)', 'EPSGrowth(%)', 'PER(x)', 'DebtRatio(%)'];
-            
-            const csvEscape = (val) => { 
-                const text = String(val).replace(/"/g, '""'); 
-                return `"${text}"`; 
+
+            const csvEscape = (val) => {
+                const text = String(val).replace(/"/g, '""');
+                return `"${text}"`;
             };
 
             // Excel-friendly text format for symbols to preserve leading zeros
@@ -387,12 +543,12 @@
 
             const rows = currentlyFiltered.map(s => [
                 excelText(s.Symbol), // Use special format for Symbol
-                csvEscape(s.Name), 
-                csvEscape(s.Market), 
-                csvEscape(s.ROE.toFixed(2)), 
-                csvEscape(s.Margin.toFixed(2)), 
-                csvEscape(s.EPSGrowth.toFixed(2)), 
-                csvEscape(s.PER.toFixed(2)), 
+                csvEscape(s.Name),
+                csvEscape(s.Market),
+                csvEscape(s.ROE.toFixed(2)),
+                csvEscape(s.Margin.toFixed(2)),
+                csvEscape(s.EPSGrowth.toFixed(2)),
+                csvEscape(s.PER.toFixed(2)),
                 csvEscape(s.DebtRatio.toFixed(2))
             ]);
             let csvContent = "\uFEFF" + headers.map(csvEscape).join(",") + "\n";
@@ -426,4 +582,5 @@
         loadData();
     </script>
 </body>
+
 </html>
