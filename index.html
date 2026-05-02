@@ -196,7 +196,6 @@
             </div>
         </div>
 
-        <!-- Individual Stock Detail Card -->
         <div id="detail-card" style="display: none; animation: fadeIn 0.4s ease;">
             <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid var(--primary); border-radius: 1rem; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem; position: relative;">
                 <button onclick="document.getElementById('detail-card').style.display='none'" 
@@ -208,16 +207,20 @@
                 </div>
                 <div id="card-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; margin-top: 0.5rem;">
                     <div style="background: var(--glass); padding: 1rem; border-radius: 0.75rem; text-align: center;">
-                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">영업이익률</div>
-                        <div id="card-margin" style="font-size: 1.25rem; font-weight: 700; color: #10b981;">30.0%</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">ROE</div>
+                        <div id="card-roe" style="font-size: 1.25rem; font-weight: 700; color: #10b981;">15.0%</div>
+                    </div>
+                    <div style="background: var(--glass); padding: 1rem; border-radius: 0.75rem; text-align: center;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">PER (배)</div>
+                        <div id="card-per" style="font-size: 1.25rem; font-weight: 700; color: #f59e0b;">20.5</div>
                     </div>
                     <div style="background: var(--glass); padding: 1rem; border-radius: 0.75rem; text-align: center;">
                         <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">EPS 성장률</div>
                         <div id="card-eps" style="font-size: 1.25rem; font-weight: 700; color: #3b82f6;">25.0%</div>
                     </div>
                     <div style="background: var(--glass); padding: 1rem; border-radius: 0.75rem; text-align: center;">
-                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">PER (배)</div>
-                        <div id="card-per" style="font-size: 1.25rem; font-weight: 700; color: #f59e0b;">20.5</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">영업이익률</div>
+                        <div id="card-margin" style="font-size: 1.25rem; font-weight: 700; color: #10b981;">30.0%</div>
                     </div>
                     <div style="background: var(--glass); padding: 1rem; border-radius: 0.75rem; text-align: center;">
                         <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">부채비율</div>
@@ -235,9 +238,9 @@
                         <th>Name</th>
                         <th>Market</th>
                         <th>ROE (%)</th>
-                        <th>Margin (%)</th>
-                        <th>EPS Growth (%)</th>
                         <th>PER (x)</th>
+                        <th>EPS Growth (%)</th>
+                        <th>Margin (%)</th>
                         <th>Debt (%)</th>
                     </tr>
                 </thead>
@@ -332,9 +335,10 @@
             document.getElementById('card-market').innerText = stock.Market;
             document.getElementById('card-market').className = 'badge ' + (stock.Market.startsWith('KR') ? 'badge-kr' : 'badge-us');
             
-            document.getElementById('card-margin').innerText = stock.Margin.toFixed(1) + '%';
-            document.getElementById('card-eps').innerText = stock.EPSGrowth.toFixed(1) + '%';
+            document.getElementById('card-roe').innerText = stock.ROE.toFixed(1) + '%';
             document.getElementById('card-per').innerText = stock.PER.toFixed(1);
+            document.getElementById('card-eps').innerText = stock.EPSGrowth.toFixed(1) + '%';
+            document.getElementById('card-margin').innerText = stock.Margin.toFixed(1) + '%';
             document.getElementById('card-debt').innerText = stock.DebtRatio.toFixed(1) + '%';
         }
 
@@ -354,9 +358,9 @@
                     <td style="font-weight: 500;">${s.Name}</td>
                     <td><span class="badge ${marketClass}">${s.Market}</span></td>
                     <td style="font-weight: 600;">${s.ROE.toFixed(2)}%</td>
-                    <td>${s.Margin.toFixed(2)}%</td>
-                    <td>${s.EPSGrowth.toFixed(2)}%</td>
                     <td>${s.PER.toFixed(2)}</td>
+                    <td>${s.EPSGrowth.toFixed(2)}%</td>
+                    <td>${s.Margin.toFixed(2)}%</td>
                     <td>${s.DebtRatio.toFixed(2)}%</td>
                 `;
                 tbody.appendChild(tr);
