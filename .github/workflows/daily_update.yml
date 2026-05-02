@@ -2,8 +2,8 @@ name: Daily Stock Data Update
 
 on:
   schedule:
-    # 매일 한국 시간 새벽 3시 (UTC 18:00)에 실행
-    - cron: '0 18 * * *'
+    # 매일 한국 시간 아침 6시 (UTC 21:00)에 실행
+    - cron: '0 21 * * *'
   workflow_dispatch: # 수동 실행 버튼 추가
 
 permissions:
