@@ -159,7 +159,42 @@
                 <h1>Global Stock Hub</h1>
                 <div id="stats" class="stats">Loading data...</div>
             </div>
-            <button id="export-btn" class="export-btn">Export to CSV</button>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <input type="text" id="search-input" placeholder="종목명 또는 심볼 검색..." 
+                    style="padding: 0.75rem 1rem; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--card-bg); color: white; width: 250px;">
+                <button id="export-btn" class="export-btn">Export to CSV</button>
+            </div>
+        </div>
+
+        <!-- Individual Stock Detail Card -->
+        <div id="detail-card" style="display: none; animation: fadeIn 0.4s ease;">
+            <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid var(--primary); border-radius: 1rem; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem; position: relative;">
+                <button onclick="document.getElementById('detail-card').style.display='none'" 
+                    style="position: absolute; right: 1rem; top: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem;">✕</button>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span id="card-symbol" style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">AAPL</span>
+                    <span id="card-name" style="font-size: 1.25rem; font-weight: 600; color: white;">Apple Inc.</span>
+                    <span id="card-market" class="badge">US_SP500</span>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 0.5rem;">
+                    <div style="background: var(--glass); padding: 1rem; border-radius: 0.75rem; text-align: center;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">영업이익률</div>
+                        <div id="card-margin" style="font-size: 1.25rem; font-weight: 700; color: #10b981;">30.0%</div>
+                    </div>
+                    <div style="background: var(--glass); padding: 1rem; border-radius: 0.75rem; text-align: center;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">EPS 성장률</div>
+                        <div id="card-eps" style="font-size: 1.25rem; font-weight: 700; color: #3b82f6;">25.0%</div>
+                    </div>
+                    <div style="background: var(--glass); padding: 1rem; border-radius: 0.75rem; text-align: center;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">PER (배)</div>
+                        <div id="card-per" style="font-size: 1.25rem; font-weight: 700; color: #f59e0b;">20.5</div>
+                    </div>
+                    <div style="background: var(--glass); padding: 1rem; border-radius: 0.75rem; text-align: center;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">부채비율</div>
+                        <div id="card-debt" style="font-size: 1.25rem; font-weight: 700; color: #ef4444;">45.2%</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="table-container">
@@ -203,6 +238,7 @@
             const epsMin = parseFloat(document.getElementById('eps-slider').value);
             const marginMin = parseFloat(document.getElementById('margin-slider').value);
             const debtMax = parseFloat(document.getElementById('debt-slider').value);
+            const searchQuery = document.getElementById('search-input').value.toLowerCase();
 
             let filtered = allStocks.filter(s => 
                 s.ROE >= roeMin && s.PER > 0 && s.PER <= perMax &&
@@ -215,10 +251,45 @@
                 filtered = filtered.filter(s => s.Market === 'US_SP500');
             }
 
+            // Search logic
+            if (searchQuery) {
+                filtered = filtered.filter(s => 
+                    s.Name.toLowerCase().includes(searchQuery) || 
+                    s.Symbol.toLowerCase().includes(searchQuery)
+                );
+                
+                // If there's an exact or very close match, show the detail card
+                const exactMatch = filtered.find(s => 
+                    s.Name.toLowerCase() === searchQuery || 
+                    s.Symbol.toLowerCase() === searchQuery
+                ) || filtered[0];
+
+                if (exactMatch && searchQuery.length > 1) {
+                    showDetailCard(exactMatch);
+                } else {
+                    document.getElementById('detail-card').style.display = 'none';
+                }
+            } else {
+                document.getElementById('detail-card').style.display = 'none';
+            }
+
             filtered.sort((a, b) => b.ROE - a.ROE);
             currentlyFiltered = filtered;
             renderTable(filtered);
             updateStats(filtered.length);
+        }
+
+        function showDetailCard(stock) {
+            document.getElementById('detail-card').style.display = 'block';
+            document.getElementById('card-symbol').innerText = stock.Symbol;
+            document.getElementById('card-name').innerText = stock.Name;
+            document.getElementById('card-market').innerText = stock.Market;
+            document.getElementById('card-market').className = 'badge ' + (stock.Market.startsWith('KR') ? 'badge-kr' : 'badge-us');
+            
+            document.getElementById('card-margin').innerText = stock.Margin.toFixed(1) + '%';
+            document.getElementById('card-eps').innerText = stock.EPSGrowth.toFixed(1) + '%';
+            document.getElementById('card-per').innerText = stock.PER.toFixed(1);
+            document.getElementById('card-debt').innerText = stock.DebtRatio.toFixed(1) + '%';
         }
 
         function renderTable(data) {
@@ -301,6 +372,7 @@
         });
 
         document.getElementById('export-btn').addEventListener('click', downloadCSV);
+        document.getElementById('search-input').addEventListener('input', filterData);
         loadData();
     </script>
 </body>
