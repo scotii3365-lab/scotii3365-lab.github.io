@@ -277,6 +277,11 @@
             background: var(--border);
             border-radius: 4px;
         }
+
+        td a:hover, #card-symbol-link:hover span {
+            text-decoration: underline !important;
+            filter: brightness(1.2);
+        }
     </style>
 </head>
 
@@ -360,8 +365,9 @@
                 <button onclick="document.getElementById('detail-card').style.display='none'"
                     style="position: absolute; right: 1rem; top: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem;">✕</button>
                 <div style="display: flex; align-items: center; gap: 1rem;">
-                    <span id="card-symbol"
-                        style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">AAPL</span>
+                    <a id="card-symbol-link" target="_blank" style="text-decoration: none;">
+                        <span id="card-symbol" style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">AAPL</span>
+                    </a>
                     <span id="card-name" style="font-size: 1.25rem; font-weight: 600; color: white;">Apple Inc.</span>
                     <span id="card-market" class="badge">US_SP500</span>
                 </div>
@@ -486,6 +492,11 @@
 
         function showDetailCard(stock) {
             document.getElementById('detail-card').style.display = 'block';
+            const symbolLink = stock.Market.startsWith('KR') 
+                ? `https://finance.naver.com/item/main.naver?code=${stock.Symbol}`
+                : `https://finance.yahoo.com/quote/${stock.Symbol}/`;
+            
+            document.getElementById('card-symbol-link').href = symbolLink;
             document.getElementById('card-symbol').innerText = stock.Symbol;
             document.getElementById('card-name').innerText = stock.Name;
             document.getElementById('card-market').innerText = stock.Market;
@@ -509,8 +520,14 @@
             data.forEach(s => {
                 const tr = document.createElement('tr');
                 const marketClass = s.Market.startsWith('KR') ? 'badge-kr' : 'badge-us';
+                const symbolLink = s.Market.startsWith('KR') 
+                    ? `https://finance.naver.com/item/main.naver?code=${s.Symbol}`
+                    : `https://finance.yahoo.com/quote/${s.Symbol}/`;
+
                 tr.innerHTML = `
-                    <td style="font-weight: 700; color: var(--primary);">${s.Symbol}</td>
+                    <td style="font-weight: 700;">
+                        <a href="${symbolLink}" target="_blank" style="color: var(--primary); text-decoration: none;">${s.Symbol}</a>
+                    </td>
                     <td style="font-weight: 500;">${s.Name}</td>
                     <td><span class="badge ${marketClass}">${s.Market}</span></td>
                     <td style="font-weight: 600;">${s.ROE.toFixed(2)}%</td>
