@@ -48,6 +48,7 @@ def get_kr_fundamental_data(ticker, current_price):
 # --- US Data Logic ---
 def get_us_fundamental_data(ticker):
     try:
+        time.sleep(0.1) # 과도한 요청 방지
         stock = yf.Ticker(ticker)
         info = stock.info
         roe = info.get('returnOnEquity', 0)
@@ -108,14 +109,19 @@ def main():
         us_symbols = df_sp500['Symbol'].tolist()
         us_market_map = {s: 'US_SP500' for s in us_symbols}
     
-    with ThreadPoolExecutor(max_workers=20) as executor:
+    print(f"미국 종목 {len(us_symbols)}개 중 데이터 수집 중...")
+    with ThreadPoolExecutor(max_workers=5) as executor:
         futures = {executor.submit(get_us_fundamental_data, symbol): symbol for symbol in us_symbols}
+        count = 0
         for future in futures:
             res = future.result()
+            count += 1
             if res:
                 symbol = res['Symbol']
                 res['Market'] = us_market_map.get(symbol, 'US_UNKNOWN')
                 all_results.append(res)
+            if count % 100 == 0:
+                print(f"미국 종목 진행 상황: {count}/{len(us_symbols)}...")
 
     # Save to JSON
     df = pd.DataFrame(all_results)
