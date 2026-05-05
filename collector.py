@@ -55,7 +55,7 @@ def get_us_fundamental_data(ticker):
         margin = info.get('operatingMargins', 0)
         debt_to_equity = info.get('debtToEquity', 0)
         eps_growth = info.get('earningsGrowth', 0)
-        per = info.get('forwardPE') or info.get('trailingPE', 0)
+        per = info.get('trailingPE') or info.get('forwardPE', 0)
         price = info.get('currentPrice', 0)
         return {
             'Symbol': ticker,
