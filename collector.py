@@ -7,7 +7,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 # --- KR Data Logic ---
-def get_kr_fundamental_data(ticker):
+def get_kr_fundamental_data(ticker, current_price):
     url = f"https://finance.naver.com/item/main.nhn?code={ticker}"
     headers = {'User-Agent': 'Mozilla/5.0'}
     try:
@@ -27,8 +27,11 @@ def get_kr_fundamental_data(ticker):
         roe = clean_val(target_df.loc['ROE(지배주주)'].iloc[curr_idx])
         margin = clean_val(target_df.loc['영업이익률'].iloc[curr_idx])
         debt_ratio = clean_val(target_df.loc['부채비율'].iloc[curr_idx])
-        per = clean_val(target_df.loc['PER(배)'].iloc[curr_idx])
+        
+        # 실시간 PER 계산: 현재가 / 최신 연간 EPS
         eps = clean_val(target_df.loc['EPS(원)'].iloc[curr_idx])
+        per = (current_price / eps) if eps > 0 else 0
+        
         prev_eps = clean_val(target_df.loc['EPS(원)'].iloc[prev_idx])
         eps_growth = ((eps - prev_eps) / prev_eps * 100) if prev_eps > 0 else 0
         return {
@@ -38,7 +41,7 @@ def get_kr_fundamental_data(ticker):
             'DebtRatio': debt_ratio,
             'PER': per,
             'EPSGrowth': eps_growth,
-            'Price': 0 # Placeholder for KR
+            'Price': current_price
         }
     except: return None
 
@@ -75,11 +78,10 @@ def main():
     kr_kosdaq = fdr.StockListing('KOSDAQ').sort_values(by='Marcap', ascending=False).head(500)
     kr_all = pd.concat([kr_kospi, kr_kosdaq])
     
-    kr_codes = kr_all['Code'].tolist()
-    kr_info = {row['Code']: {'Name': row['Name'], 'Market': row['Market']} for _, row in kr_all.iterrows()}
+    kr_info = {row['Code']: {'Name': row['Name'], 'Market': row['Market'], 'Close': row['Close']} for _, row in kr_all.iterrows()}
     
     with ThreadPoolExecutor(max_workers=10) as executor:
-        futures = {executor.submit(get_kr_fundamental_data, code): code for code in kr_codes}
+        futures = {executor.submit(get_kr_fundamental_data, code, kr_info[code]['Close']): code for code in kr_info}
         for future in futures:
             res = future.result()
             if res:
