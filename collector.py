@@ -5,6 +5,7 @@ import requests
 import io
 import time
 from concurrent.futures import ThreadPoolExecutor
+from bs4 import BeautifulSoup
 
 # --- KR Data Logic ---
 def get_kr_fundamental_data(ticker, current_price):
@@ -28,10 +29,22 @@ def get_kr_fundamental_data(ticker, current_price):
         margin = clean_val(target_df.loc['영업이익률'].iloc[curr_idx])
         debt_ratio = clean_val(target_df.loc['부채비율'].iloc[curr_idx])
         
-        # 실시간 PER 계산: 현재가 / 최신 연간 EPS
-        eps = clean_val(target_df.loc['EPS(원)'].iloc[curr_idx])
-        per = (current_price / eps) if eps > 0 else 0
-        
+        # 실시간 TTM PER 및 TTM EPS 파싱 (네이버 요약 정보 기준)
+        soup = BeautifulSoup(res.text, 'html.parser')
+        eps_element = soup.find(id='_eps')
+        if eps_element:
+            eps_val = eps_element.text.strip().replace(',', '')
+            eps = float(eps_val) if eps_val and eps_val != '-' else 0
+        else:
+            eps = clean_val(target_df.loc['EPS(원)'].iloc[curr_idx])
+            
+        per_element = soup.find(id='_per')
+        if per_element:
+            per_val = per_element.text.strip().replace(',', '')
+            per = float(per_val) if per_val and per_val != '-' else 0
+        else:
+            per = (current_price / eps) if eps > 0 else 0
+            
         prev_eps = clean_val(target_df.loc['EPS(원)'].iloc[prev_idx])
         eps_growth = ((eps - prev_eps) / prev_eps * 100) if prev_eps > 0 else 0
         return {
@@ -43,14 +56,20 @@ def get_kr_fundamental_data(ticker, current_price):
             'EPSGrowth': eps_growth,
             'Price': current_price
         }
-    except: return None
+    except Exception as e:
+        print(f"Failed to fetch KR {ticker}: {e}")
+        return None
 
 # --- US Data Logic ---
 def get_us_fundamental_data(ticker):
+    yf_ticker = ticker.replace('.', '-')
     try:
         time.sleep(0.1) # 과도한 요청 방지
-        stock = yf.Ticker(ticker)
+        stock = yf.Ticker(yf_ticker)
         info = stock.info
+        if not info or not isinstance(info, dict):
+            print(f"Failed to fetch {ticker}: Empty info from yfinance")
+            return None
         roe = info.get('returnOnEquity', 0)
         margin = info.get('operatingMargins', 0)
         debt_to_equity = info.get('debtToEquity', 0)
@@ -67,7 +86,9 @@ def get_us_fundamental_data(ticker):
             'PER': per if per else 0,
             'Price': price
         }
-    except: return None
+    except Exception as e:
+        print(f"Failed to fetch {ticker}: {e}")
+        return None
 
 def main():
     print("=== 통합 데이터 수집 시작 ===")
@@ -91,25 +112,26 @@ def main():
                 res['Market'] = 'KR_' + kr_info[code]['Market']
                 all_results.append(res)
 
-    # 2. US Stocks (NASDAQ 1000 + NYSE 1000)
-    print("미국 주요 종목 데이터 수집 중 (나스닥 1000 + 뉴욕 1000)...")
+    # 2. US Stocks (NASDAQ 300 + NYSE 300)
+    print("미국 주요 종목 데이터 수집 중 (나스닥 300 + 뉴욕 300)...")
     try:
-        df_nasdaq = fdr.StockListing('NASDAQ').head(1000)
+        df_nasdaq = fdr.StockListing('NASDAQ').head(300)
         df_nasdaq['MarketInfo'] = 'US_NASDAQ'
         
-        df_nyse = fdr.StockListing('NYSE').head(1000)
+        df_nyse = fdr.StockListing('NYSE').head(300)
         df_nyse['MarketInfo'] = 'US_NYSE'
         
         us_all = pd.concat([df_nasdaq, df_nyse]).drop_duplicates(subset=['Symbol'])
         us_symbols = us_all['Symbol'].tolist()
         us_market_map = {row['Symbol']: row['MarketInfo'] for _, row in us_all.iterrows()}
-    except:
-        print("미국 리스트 확보 실패, S&P 500으로 대체합니다.")
+    except Exception as e:
+        print(f"미국 리스트 확보 실패 ({e}), S&P 500으로 대체합니다.")
         df_sp500 = fdr.StockListing('S&P500')
         us_symbols = df_sp500['Symbol'].tolist()
         us_market_map = {s: 'US_SP500' for s in us_symbols}
     
     print(f"미국 종목 {len(us_symbols)}개 중 데이터 수집 중...")
+    
     with ThreadPoolExecutor(max_workers=5) as executor:
         futures = {executor.submit(get_us_fundamental_data, symbol): symbol for symbol in us_symbols}
         count = 0
@@ -120,7 +142,7 @@ def main():
                 symbol = res['Symbol']
                 res['Market'] = us_market_map.get(symbol, 'US_UNKNOWN')
                 all_results.append(res)
-            if count % 100 == 0:
+            if count % 50 == 0:
                 print(f"미국 종목 진행 상황: {count}/{len(us_symbols)}...")
 
     # Save to JSON
