@@ -9,44 +9,57 @@ from bs4 import BeautifulSoup
 
 # --- KR Data Logic ---
 def get_kr_fundamental_data(ticker, current_price):
-    url = f"https://finance.naver.com/item/main.nhn?code={ticker}"
-    headers = {'User-Agent': 'Mozilla/5.0'}
+    url = f"https://m.stock.naver.com/api/stock/{ticker}/finance/annual"
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
     try:
-        res = requests.get(url, headers=headers)
-        df_list = pd.read_html(io.StringIO(res.text))
-        target_df = None
-        for df in df_list:
-            if any('주요재무정보' in str(col) for col in df.columns):
-                target_df = df
-                break
-        if target_df is None: return None
-        target_df.index = target_df.iloc[:, 0]
-        curr_idx, prev_idx = 3, 2
-        def clean_val(val):
-            if pd.isna(val) or val == '-': return 0
-            return float(str(val).replace(',', ''))
-        roe = clean_val(target_df.loc['ROE(지배주주)'].iloc[curr_idx])
-        margin = clean_val(target_df.loc['영업이익률'].iloc[curr_idx])
-        debt_ratio = clean_val(target_df.loc['부채비율'].iloc[curr_idx])
+        res = requests.get(url, headers=headers, timeout=5)
+        if res.status_code != 200:
+            return None
+        data = res.json()
+        finance_info = data.get('financeInfo')
+        if not finance_info:
+            return None
         
-        # 실시간 TTM PER 및 TTM EPS 파싱 (네이버 요약 정보 기준)
-        soup = BeautifulSoup(res.text, 'html.parser')
-        eps_element = soup.find(id='_eps')
-        if eps_element:
-            eps_val = eps_element.text.strip().replace(',', '')
-            eps = float(eps_val) if eps_val and eps_val != '-' else 0
+        tr_list = finance_info.get('trTitleList', [])
+        # 확정 실적(isConsensus == 'N') 중 가장 최근과 그 직전 연도
+        actual_keys = [tr['key'] for tr in tr_list if tr.get('isConsensus') == 'N']
+        if not actual_keys:
+            actual_keys = [tr['key'] for tr in tr_list]
+        
+        if len(actual_keys) >= 2:
+            curr_key = actual_keys[-1]
+            prev_key = actual_keys[-2]
+        elif len(actual_keys) == 1:
+            curr_key = actual_keys[0]
+            prev_key = None
         else:
-            eps = clean_val(target_df.loc['EPS(원)'].iloc[curr_idx])
-            
-        per_element = soup.find(id='_per')
-        if per_element:
-            per_val = per_element.text.strip().replace(',', '')
-            per = float(per_val) if per_val and per_val != '-' else 0
-        else:
-            per = (current_price / eps) if eps > 0 else 0
-            
-        prev_eps = clean_val(target_df.loc['EPS(원)'].iloc[prev_idx])
-        eps_growth = ((eps - prev_eps) / prev_eps * 100) if prev_eps > 0 else 0
+            return None
+
+        row_map = {r['title']: r.get('columns', {}) for r in finance_info.get('rowList', [])}
+
+        def parse_val(title, key):
+            if not key or title not in row_map:
+                return 0.0
+            col_info = row_map[title].get(key)
+            if not col_info:
+                return 0.0
+            val_str = col_info.get('value', '-')
+            if val_str in ['-', '', None]:
+                return 0.0
+            try:
+                return float(str(val_str).replace(',', ''))
+            except (ValueError, TypeError):
+                return 0.0
+
+        roe = parse_val('ROE', curr_key)
+        margin = parse_val('영업이익률', curr_key)
+        debt_ratio = parse_val('부채비율', curr_key)
+        per = parse_val('PER', curr_key)
+        eps = parse_val('EPS', curr_key)
+        prev_eps = parse_val('EPS', prev_key) if prev_key else 0.0
+
+        eps_growth = ((eps - prev_eps) / abs(prev_eps) * 100) if prev_eps != 0 else 0.0
+
         return {
             'Symbol': ticker,
             'ROE': roe,
