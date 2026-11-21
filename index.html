@@ -491,6 +491,7 @@
         let currentlyFiltered = [];
         let currentMarket = 'ALL';
         let priceAsOf = null;
+        let metaPriceAsOf = null;
 
         // ---- 데이터 기준일 ----
         function parseDateSafe(value) {
@@ -568,7 +569,7 @@
                     const meta = await metaRes.json();
                     const updated = parseDateSafe(meta.updated_at || meta.updated_at_utc);
                     if (updated) candidates.push({ date: updated, label: 'last_updated.json 수집 시각' });
-                    if (meta.kr_price_asof) priceAsOf = meta.kr_price_asof;
+                    if (meta.kr_price_asof) metaPriceAsOf = meta.kr_price_asof;
                 }
             } catch (error) {
                 // last_updated.json 이 없어도 동작해야 한다
@@ -577,10 +578,9 @@
             showDataDate(candidates.length ? candidates[0].date : null,
                 candidates.length ? candidates[0].label : '');
 
-            if (!priceAsOf) {
-                const dates = allStocks.map(s => s.PriceDate).filter(Boolean).sort();
-                if (dates.length) priceAsOf = dates[dates.length - 1];
-            }
+            // 종목 레코드의 PriceDate 가 가장 정확한 신호이므로 우선 사용하고, 없으면 메타데이터로 대체
+            const priceDates = allStocks.map(s => s.PriceDate).filter(Boolean).sort();
+            priceAsOf = priceDates.length ? priceDates[priceDates.length - 1] : metaPriceAsOf;
             if (priceAsOf) {
                 const priceDate = document.getElementById('price-date');
                 priceDate.style.display = 'block';
