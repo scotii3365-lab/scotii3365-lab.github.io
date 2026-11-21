@@ -171,10 +171,55 @@
             align-items: flex-end;
         }
 
+        .title-area {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
         .title-area h1 {
             font-size: 1.875rem;
             font-weight: 700;
             margin-bottom: 0.5rem;
+        }
+
+        .data-date {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            align-self: flex-start;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 0.35rem 0.8rem;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .data-date strong {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .data-date .dot {
+            width: 0.45rem;
+            height: 0.45rem;
+            border-radius: 50%;
+            background: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .data-date.stale {
+            border-color: rgba(245, 158, 11, 0.5);
+            color: #fbbf24;
+        }
+
+        .data-date.stale .dot {
+            background: #f59e0b;
+        }
+
+        .data-date.stale strong {
+            color: #fbbf24;
         }
 
         .stats {
@@ -252,6 +297,18 @@
         .badge-us {
             background: rgba(56, 189, 248, 0.2);
             color: #7dd3fc;
+        }
+
+        .price-kr {
+            color: #34d399;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .price-us {
+            color: #7dd3fc;
+            font-weight: 600;
+            white-space: nowrap;
         }
 
         .no-results {
@@ -350,6 +407,11 @@
         <div class="header">
             <div class="title-area">
                 <h1>Global Stock Hub</h1>
+                <div id="data-date" class="data-date" title="데이터 수집 시각">
+                    <span class="dot"></span>
+                    <span>데이터 기준일 <strong id="data-date-value">확인 중…</strong></span>
+                </div>
+                <div id="price-date" class="stats" style="display: none;"></div>
                 <div id="stats" class="stats">Loading data...</div>
             </div>
             <div style="display: flex; gap: 1rem; align-items: center;">
@@ -370,6 +432,10 @@
                     </a>
                     <span id="card-name" style="font-size: 1.25rem; font-weight: 600; color: white;">Apple Inc.</span>
                     <span id="card-market" class="badge">US_SP500</span>
+                </div>
+                <div style="display: flex; align-items: baseline; gap: 0.75rem;">
+                    <span id="card-price" style="font-size: 1.35rem; font-weight: 700; color: white;">-</span>
+                    <span id="card-price-date" style="font-size: 0.75rem; color: var(--text-muted);"></span>
                 </div>
                 <div id="card-grid"
                     style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; margin-top: 0.5rem;">
@@ -404,6 +470,7 @@
                         <th>Symbol</th>
                         <th>Name</th>
                         <th>Market</th>
+                        <th>Price</th>
                         <th>ROE (%)</th>
                         <th>PER (x)</th>
                         <th>EPS Growth (%)</th>
@@ -423,15 +490,104 @@
         let allStocks = [];
         let currentlyFiltered = [];
         let currentMarket = 'ALL';
+        let priceAsOf = null;
+
+        // ---- 데이터 기준일 ----
+        function parseDateSafe(value) {
+            if (!value) return null;
+            const date = new Date(value);
+            return isNaN(date.getTime()) ? null : date;
+        }
+
+        function formatKST(date) {
+            const parts = new Intl.DateTimeFormat('ko-KR', {
+                timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit',
+                day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false
+            }).formatToParts(date);
+            const pick = (type) => (parts.find(p => p.type === type) || {}).value || '';
+            return `${pick('year')}.${pick('month')}.${pick('day')} ${pick('hour')}:${pick('minute')}`;
+        }
+
+        function relativeAge(date) {
+            const hours = (Date.now() - date.getTime()) / 36e5;
+            if (hours < 1) return '방금 전';
+            if (hours < 24) return `${Math.floor(hours)}시간 전`;
+            return `${Math.floor(hours / 24)}일 전`;
+        }
+
+        function showDataDate(date, sourceLabel) {
+            const box = document.getElementById('data-date');
+            const value = document.getElementById('data-date-value');
+            if (!date) {
+                value.innerText = '확인 불가';
+                box.title = '데이터 기준일을 확인하지 못했습니다.';
+                return;
+            }
+            value.innerText = `${formatKST(date)} (KST) · ${relativeAge(date)}`;
+            box.title = `데이터 기준일: ${formatKST(date)} (KST)\n출처: ${sourceLabel}`;
+            const hours = (Date.now() - date.getTime()) / 36e5;
+            if (hours >= 48) {
+                box.classList.add('stale');
+                box.title += '\n데이터가 48시간 이상 갱신되지 않았습니다.';
+            } else {
+                box.classList.remove('stale');
+            }
+        }
+
+        function formatPrice(stock) {
+            const price = Number(stock.Price);
+            if (!isFinite(price) || price <= 0) return '-';
+            if (String(stock.Market).startsWith('KR')) {
+                return '₩' + price.toLocaleString('ko-KR', { maximumFractionDigits: 0 });
+            }
+            return '$' + price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
 
         async function loadData() {
+            let response;
             try {
-                const response = await fetch('stocks_all.json');
+                response = await fetch('stocks_all.json', { cache: 'no-store' });
+                if (!response.ok) throw new Error('HTTP ' + response.status);
                 allStocks = await response.json();
-                filterData();
             } catch (error) {
                 document.getElementById('stats').innerText = 'Data file not found. Please run collector.py.';
+                showDataDate(null, '');
+                return;
             }
+
+            // 기준일은 두 신호 중 더 최근 것을 고른다:
+            //  (1) stocks_all.json 의 서버 Last-Modified  (2) last_updated.json 의 수집 시각
+            const candidates = [];
+            const lastModified = parseDateSafe(response.headers.get('last-modified'));
+            if (lastModified) {
+                candidates.push({ date: lastModified, label: 'stocks_all.json 갱신 시각 (서버)' });
+            }
+            try {
+                const metaRes = await fetch('last_updated.json', { cache: 'no-store' });
+                if (metaRes.ok) {
+                    const meta = await metaRes.json();
+                    const updated = parseDateSafe(meta.updated_at || meta.updated_at_utc);
+                    if (updated) candidates.push({ date: updated, label: 'last_updated.json 수집 시각' });
+                    if (meta.kr_price_asof) priceAsOf = meta.kr_price_asof;
+                }
+            } catch (error) {
+                // last_updated.json 이 없어도 동작해야 한다
+            }
+            candidates.sort((a, b) => b.date - a.date);
+            showDataDate(candidates.length ? candidates[0].date : null,
+                candidates.length ? candidates[0].label : '');
+
+            if (!priceAsOf) {
+                const dates = allStocks.map(s => s.PriceDate).filter(Boolean).sort();
+                if (dates.length) priceAsOf = dates[dates.length - 1];
+            }
+            if (priceAsOf) {
+                const priceDate = document.getElementById('price-date');
+                priceDate.style.display = 'block';
+                priceDate.innerText = `주가 기준일: 한국 ${priceAsOf} 종가`;
+            }
+
+            filterData();
         }
 
         function filterData() {
@@ -507,6 +663,11 @@
             document.getElementById('card-eps').innerText = stock.EPSGrowth.toFixed(1) + '%';
             document.getElementById('card-margin').innerText = stock.Margin.toFixed(1) + '%';
             document.getElementById('card-debt').innerText = stock.DebtRatio.toFixed(1) + '%';
+
+            const cardPrice = document.getElementById('card-price');
+            cardPrice.innerText = formatPrice(stock);
+            cardPrice.className = stock.Market.startsWith('KR') ? 'price-kr' : 'price-us';
+            document.getElementById('card-price-date').innerText = stock.PriceDate ? `${stock.PriceDate} 종가` : '';
         }
 
         function renderTable(data) {
@@ -520,6 +681,7 @@
             data.forEach(s => {
                 const tr = document.createElement('tr');
                 const marketClass = s.Market.startsWith('KR') ? 'badge-kr' : 'badge-us';
+                const priceClass = s.Market.startsWith('KR') ? 'price-kr' : 'price-us';
                 const symbolLink = s.Market.startsWith('KR') 
                     ? `https://finance.naver.com/item/main.naver?code=${s.Symbol}`
                     : `https://finance.yahoo.com/quote/${s.Symbol}/`;
@@ -530,6 +692,7 @@
                     </td>
                     <td style="font-weight: 500;">${s.Name}</td>
                     <td><span class="badge ${marketClass}">${s.Market}</span></td>
+                    <td><span class="${priceClass}">${formatPrice(s)}</span></td>
                     <td style="font-weight: 600;">${s.ROE.toFixed(2)}%</td>
                     <td>${s.PER.toFixed(2)}</td>
                     <td>${s.EPSGrowth.toFixed(2)}%</td>
@@ -546,7 +709,7 @@
 
         function downloadCSV() {
             if (currentlyFiltered.length === 0) return;
-            const headers = ['Symbol', 'Name', 'Market', 'ROE(%)', 'Margin(%)', 'EPSGrowth(%)', 'PER(x)', 'DebtRatio(%)'];
+            const headers = ['Symbol', 'Name', 'Market', 'Price', 'ROE(%)', 'Margin(%)', 'EPSGrowth(%)', 'PER(x)', 'DebtRatio(%)'];
 
             const csvEscape = (val) => {
                 const text = String(val).replace(/"/g, '""');
@@ -562,6 +725,7 @@
                 excelText(s.Symbol), // Use special format for Symbol
                 csvEscape(s.Name),
                 csvEscape(s.Market),
+                csvEscape(isFinite(Number(s.Price)) && Number(s.Price) > 0 ? Number(s.Price).toFixed(2) : ''),
                 csvEscape(s.ROE.toFixed(2)),
                 csvEscape(s.Margin.toFixed(2)),
                 csvEscape(s.EPSGrowth.toFixed(2)),
